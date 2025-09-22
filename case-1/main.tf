@@ -129,3 +129,67 @@ resource "aws_launch_template" "case1-ec2-temp" {
 
   
 }
+
+resource "aws_autoscaling_group" "case1-asg" {
+    desired_capacity     = 2
+    max_size             = 6
+    min_size             = 2
+    vpc_zone_identifier  = aws_subnet.case1-subnet[*].id
+    launch_template {
+        id      = aws_launch_template.case1-ec2-temp.id
+        version = "$Latest"
+    }
+    target_group_arns    = [aws_lb_target_group.case1-tg.arn]
+    tag {
+        key                 = "Name"
+        value               = "case1-asg-instance"
+        propagate_at_launch = true
+    }
+    health_check_type         = "EC2"
+    health_check_grace_period = 60  
+}
+
+resource "aws_lb" "case1-lb" {
+    name               = "case1-lb"
+    internal           = false
+    load_balancer_type = "application"
+    security_groups    = [aws_security_group.case1-sg-lb.id]
+    subnets            = aws_subnet.case1-subnet[*].id
+
+    tags = {
+      Name = "case1-lb"
+    } 
+  
+}
+resource "aws_lb_target_group" "case1-tg" {
+    name     = "case1-tg"
+    port     = 80
+    protocol = "HTTP"
+    vpc_id   = aws_vpc.case1-vpc.id
+
+    health_check {
+        path                = "/"
+        protocol            = "HTTP"
+        matcher             = "200"
+        interval            = 30
+        timeout             = 5
+        healthy_threshold   = 2
+        unhealthy_threshold = 2
+    }
+
+    tags = {
+      Name = "case1-tg"
+    } 
+  
+}
+resource "aws_lb_listener" "case1-lb-listener" {
+    load_balancer_arn = aws_lb.case1-lb.arn
+    port              = 80
+    protocol          = "HTTP"
+
+    default_action {
+        type             = "forward"
+        target_group_arn = aws_lb_target_group.case1-tg.arn
+    }
+  
+}
