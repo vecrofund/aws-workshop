@@ -98,6 +98,12 @@ resource "aws_security_group" "case1-sg-ec2" {
         security_groups = [aws_security_group.case1-sg-lb.id]
     }
     ingress {
+        from_port       = 80
+        to_port         = 80
+        protocol        = "tcp"
+        cidr_blocks = [ "0.0.0.0/0" ]
+    }
+    ingress {
         from_port       = 22
         to_port         = 22
         protocol        = "tcp"
@@ -119,6 +125,9 @@ resource "aws_launch_template" "case1-ec2-temp" {
     image_id      = data.aws_ami.amzonami.id
     instance_type = "t3.micro"
     key_name = "awsdev"
+    monitoring {
+        enabled = true
+    }
 
     tag_specifications {
         resource_type = "instance"
@@ -128,15 +137,19 @@ resource "aws_launch_template" "case1-ec2-temp" {
     }
     vpc_security_group_ids = [aws_security_group.case1-sg-ec2.id]
     user_data = base64encode(file("user_data.sh"))
+
+    lifecycle {
+        create_before_destroy = true
+    }
     
 
   
 }
 
 resource "aws_autoscaling_group" "case1-asg" {
-    desired_capacity     = 2
+    desired_capacity     = 1
     max_size             = 6
-    min_size             = 2
+    min_size             = 1
     vpc_zone_identifier  = aws_subnet.case1-subnet[*].id
     launch_template {
         id      = aws_launch_template.case1-ec2-temp.id
@@ -221,4 +234,22 @@ resource "aws_autoscaling_policy" "scale_in_cpu" {
         target_value = 30.0
     }
     
+}
+
+resource "aws_cloudwatch_metric_alarm" "serversideerror" {
+    alarm_name          = "High-5xx-Error-Rate"
+    comparison_operator = "GreaterThanOrEqualToThreshold"
+    evaluation_periods  = 2
+    metric_name         = "HTTPCode_Target_5XX_Count"
+    namespace           = "AWS/ApplicationELB"
+    period              = 60
+    statistic           = "Sum"
+    threshold           = 10
+    alarm_description   = "This metric monitors high 5xx error rates"
+    dimensions = {
+        LoadBalancer = aws_lb.case1-lb.dns_name
+    }
+    alarm_actions = [aws_autoscaling_policy.scale_out_cpu.arn]
+    ok_actions    = [aws_autoscaling_policy.scale_in_cpu.arn]
+  
 }
