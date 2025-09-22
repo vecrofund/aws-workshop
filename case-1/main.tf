@@ -44,6 +44,7 @@ resource "aws_subnet" "case1-subnet" {
     count = length(data.aws_availability_zones.case1-azs.names)
     vpc_id = aws_vpc.case1-vpc.id
     cidr_block = "10.0.${count.index + 1}.0/24"
+    availability_zone = data.aws_availability_zones.case1-azs.names[count.index]
     tags = {
         Name = "case1-subnet-${count.index + 1}"
     }
@@ -125,6 +126,6 @@ resource "aws_launch_template" "case1-ec2-temp" {
     }
     vpc_security_group_ids = [aws_security_group.case1-sg-ec2.id]
     user_data = base64encode(file("user_data.sh"))
-    
+
   
 }
