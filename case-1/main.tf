@@ -196,3 +196,29 @@ resource "aws_lb_listener" "case1-lb-listener" {
     }
   
 }
+
+resource "aws_autoscaling_policy" "scale_out_cpu" {
+    name = "cpuout"
+    autoscaling_group_name = aws_autoscaling_group.case1-asg.name
+    policy_type = "TargetTrackingScaling"
+    target_tracking_configuration {
+        predefined_metric_specification {
+            predefined_metric_type = "ASGAverageCPUUtilization"
+        }
+        target_value = 50.0
+    }
+    
+}
+
+resource "aws_autoscaling_policy" "scale_in_cpu" {
+    name = "cpuscalein"
+    autoscaling_group_name = aws_autoscaling_group.case1-asg.name
+    policy_type = "TargetTrackingScaling"
+    target_tracking_configuration {
+        predefined_metric_specification {
+            predefined_metric_type = "ASGAverageCPUUtilization"
+        }
+        target_value = 30.0
+    }
+    
+}
