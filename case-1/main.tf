@@ -23,7 +23,7 @@ data "aws_ami" "amzonami" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-*-x86_64"]
   }
 }
 
@@ -118,6 +118,7 @@ resource "aws_launch_template" "case1-ec2-temp" {
     name_prefix   = "case1-ec2-temp-"
     image_id      = data.aws_ami.amzonami.id
     instance_type = "t3.micro"
+    key_name = "awsdev"
 
     tag_specifications {
         resource_type = "instance"
