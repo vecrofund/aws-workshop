@@ -253,3 +253,16 @@ resource "aws_cloudwatch_metric_alarm" "serversideerror" {
     ok_actions    = [aws_autoscaling_policy.scale_in_cpu.arn]
   
 }
+
+resource "aws_route53_record" "r53" {
+    zone_id = "Z02006811XA543NMXJYU3"
+    name    = "mywebsite"
+    type    = "A"
+    
+    alias {
+        name                   = aws_lb.case1-lb.dns_name
+        zone_id                = aws_lb.case1-lb.zone_id
+        evaluate_target_health = true
+    }
+  
+}
