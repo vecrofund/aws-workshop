@@ -141,15 +141,33 @@ resource "aws_launch_template" "case1-ec2-temp" {
     lifecycle {
         create_before_destroy = true
     }
+    block_device_mappings {
+        device_name = "/dev/xvda"
+
+        ebs {
+            volume_size = 30
+            volume_type = "gp3"
+            delete_on_termination = true 
+        }
+    }
+    block_device_mappings {
+        device_name = "/dev/xvdb"
+
+        ebs {
+            volume_size = 50
+            volume_type = "gp3"
+            delete_on_termination = false 
+        }
+    }
     
 
   
 }
 
 resource "aws_autoscaling_group" "case1-asg" {
-    desired_capacity     = 1
+    desired_capacity     = 2
     max_size             = 6
-    min_size             = 1
+    min_size             = 2
     vpc_zone_identifier  = aws_subnet.case1-subnet[*].id
     launch_template {
         id      = aws_launch_template.case1-ec2-temp.id
@@ -223,46 +241,36 @@ resource "aws_autoscaling_policy" "scale_out_cpu" {
     
 }
 
-resource "aws_autoscaling_policy" "scale_in_cpu" {
-    name = "cpuscalein"
-    autoscaling_group_name = aws_autoscaling_group.case1-asg.name
-    policy_type = "TargetTrackingScaling"
-    target_tracking_configuration {
-        predefined_metric_specification {
-            predefined_metric_type = "ASGAverageCPUUtilization"
-        }
-        target_value = 30.0
-    }
-    
-}
 
-resource "aws_cloudwatch_metric_alarm" "serversideerror" {
-    alarm_name          = "High-5xx-Error-Rate"
-    comparison_operator = "GreaterThanOrEqualToThreshold"
-    evaluation_periods  = 2
-    metric_name         = "HTTPCode_Target_5XX_Count"
-    namespace           = "AWS/ApplicationELB"
-    period              = 60
-    statistic           = "Sum"
-    threshold           = 10
-    alarm_description   = "This metric monitors high 5xx error rates"
-    dimensions = {
-        LoadBalancer = aws_lb.case1-lb.dns_name
-    }
-    alarm_actions = [aws_autoscaling_policy.scale_out_cpu.arn]
-    ok_actions    = [aws_autoscaling_policy.scale_in_cpu.arn]
-  
-}
 
-resource "aws_route53_record" "r53" {
-    zone_id = "Z02006811XA543NMXJYU3"
-    name    = "mywebsite"
-    type    = "A"
-    
-    alias {
-        name                   = aws_lb.case1-lb.dns_name
-        zone_id                = aws_lb.case1-lb.zone_id
-        evaluate_target_health = true
-    }
+
+# resource "aws_cloudwatch_metric_alarm" "serversideerror" {
+#     alarm_name          = "High-5xx-Error-Rate"
+#     comparison_operator = "GreaterThanOrEqualToThreshold"
+#     evaluation_periods  = 2
+#     metric_name         = "HTTPCode_Target_5XX_Count"
+#     namespace           = "AWS/ApplicationELB"
+#     period              = 60
+#     statistic           = "Sum"
+#     threshold           = 10
+#     alarm_description   = "This metric monitors high 5xx error rates"
+#     dimensions = {
+#         LoadBalancer = aws_lb.case1-lb.dns_name
+#     }
+#     alarm_actions = [aws_autoscaling_policy.scale_out_cpu.arn]
+#     ok_actions    = [aws_autoscaling_policy.scale_in_cpu.arn]
   
-}
+# }
+
+# resource "aws_route53_record" "r53" {
+#     zone_id = "Z02006811XA543NMXJYU3"
+#     name    = "mywebsite"
+#     type    = "A"
+    
+#     alias {
+#         name                   = aws_lb.case1-lb.dns_name
+#         zone_id                = aws_lb.case1-lb.zone_id
+#         evaluate_target_health = true
+#     }
+  
+# }
