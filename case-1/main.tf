@@ -32,6 +32,7 @@ resource "aws_vpc" "case1-vpc" {
       Name = "case1-vpc"
     }
     cidr_block = var.aws_vpc_cidr
+    
 }
 resource "aws_internet_gateway" "case1-igw" {
     vpc_id = aws_vpc.case1-vpc.id
@@ -150,15 +151,15 @@ resource "aws_launch_template" "case1-ec2-temp" {
             delete_on_termination = true 
         }
     }
-    block_device_mappings {
-        device_name = "/dev/xvdb"
+    # block_device_mappings {
+    #     device_name = "/dev/xvdb"
 
-        ebs {
-            volume_size = 50
-            volume_type = "gp3"
-            delete_on_termination = false 
-        }
-    }
+    #     ebs {
+    #         volume_size = 50
+    #         volume_type = "gp3"
+    #         delete_on_termination = false 
+    #     }
+    # }
     
 
   
@@ -241,7 +242,18 @@ resource "aws_autoscaling_policy" "scale_out_cpu" {
     
 }
 
+resource "aws_efs_file_system" "case1-efs" {
+  creation_token = "my-product"
 
+  tags = {
+    Name = "MyProductefs"
+  }
+}
+resource "aws_efs_mount_target" "alpha" {
+    count = length(aws_subnet.case1-subnet[*].id)
+  file_system_id = aws_efs_file_system.case1-efs.id
+  subnet_id      = aws_subnet.case1-subnet[count.index].id
+}
 
 
 # resource "aws_cloudwatch_metric_alarm" "serversideerror" {
