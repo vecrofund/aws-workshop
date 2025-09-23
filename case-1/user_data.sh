@@ -61,4 +61,4 @@ systemctl restart nginx
 # fi    
 # echo "Bootstrap complete."
 mkdir -p /mnt/efs
-sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport 10.0.1.195:/ /mnt/efs
+sudo mount -t efs -o tls fs-0be1de7045d5059f6:/ /mnt/efs/
