@@ -78,3 +78,29 @@ resource "aws_security_group" "case9-vpc1-sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 }
+
+
+resource "aws_instance" "vpc1-pub-vm" {
+    ami           = data.aws_ami.amzonami.id
+    instance_type = "t2.medium"
+    subnet_id     = aws_subnet.case9-vpc1-public-subnet[0].id
+    security_groups = [aws_security_group.case9-vpc1-sg.id]
+        associate_public_ip_address = true
+        key_name = "awsdev"
+        iam_instance_profile = aws_iam_instance_profile.case9-iam-instance-profile.name
+    tags = {
+        Name = "vpc1-pub-vm"
+    }
+}
+resource "aws_instance" "vpc1-pvt-vm" {
+    ami           = data.aws_ami.amzonami.id
+    instance_type = "t2.medium"
+    subnet_id     = aws_subnet.case9-vpc1-private-subnet[0].id
+    security_groups = [aws_security_group.case9-vpc1-sg.id]
+        associate_public_ip_address = false
+        key_name = "awsdev"
+        iam_instance_profile = aws_iam_instance_profile.case9-iam-instance-profile.name
+    tags = {
+        Name = "vpc1-pvt-vm"
+    }
+}
