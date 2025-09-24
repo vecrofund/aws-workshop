@@ -37,7 +37,7 @@ resource "aws_subnet" "case3-private-subnet" {
     depends_on = [ aws_nat_gateway.case3-nat-gateway ]
 }
 resource "aws_eip" "case3-nat-eip" {
-    vpc = true
+    domain = "vpc"
     tags = {
         Name = "case3-nat-eip"
     }
