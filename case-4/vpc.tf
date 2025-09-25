@@ -50,3 +50,45 @@ resource "aws_security_group" "case4-vpc1-sg" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 }
+
+resource "aws_instance" "vpc1-pub-vm" {
+    ami           = data.aws_ami.amzonami.id
+    instance_type = "t2.medium"
+    subnet_id     = aws_subnet.case4-vpc1-public-subnet[0].id
+    security_groups = [aws_security_group.case4-vpc1-sg.id]
+        associate_public_ip_address = true
+        key_name = "awsdev"
+        iam_instance_profile = aws_iam_instance_profile.case4-iam-instance-profile.name
+    tags = {
+        Name = "vpc1-pub-vm"
+    }
+}
+
+
+# vpn config
+
+resource "aws_vpn_gateway" "vpn_gw" {
+  vpc_id = aws_vpc.case4-vpc-1.id
+
+  tags = {
+    Name = "case4-vpn-gw"
+  }
+}
+resource "aws_customer_gateway" "main" {
+  bgp_asn    = 65000
+  ip_address = aws_eip.cg-ip.public_ip
+  type       = "ipsec.1"
+  tags = {
+    Name = "main-customer-gateway"
+  }
+}
+resource "aws_vpn_connection" "case4-vpn-connection" {
+  vpn_gateway_id      = aws_vpn_gateway.vpn_gw.id
+  customer_gateway_id = aws_customer_gateway.main.id
+  type                = "ipsec.1"
+  static_routes_only  = true
+
+  tags = {
+    Name = "main-vpn-connection"
+  }
+}

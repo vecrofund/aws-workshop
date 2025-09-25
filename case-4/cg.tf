@@ -40,19 +40,32 @@ data "aws_ami" "ohio-amazonami" {
   }
 }
 
+resource "aws_eip" "cg-ip" {
+    provider = aws.ohio
+    vpc = true
+    tags = {
+        Name = "customer-gateway-eip"
+    }
+  
+}
 
+resource "aws_eip_association" "cg-eip-assoc" {
+    provider = aws.ohio
+    instance_id   = aws_instance.ohio-vm.id
+    allocation_id = aws_eip.cg-ip.id
+}
 
 resource "aws_instance" "ohio-vm" {
   provider = aws.ohio
   ami           = data.aws_ami.ohio-amazonami.id
-  instance_type = "t2.micro"
+  instance_type = "t2.medium"
   subnet_id     = data.aws_subnets.ohio-subnet-ids.ids[0]
   security_groups = [data.aws_security_group.default.id]
-  associate_public_ip_address = true
 
   tags = {
     Name = "customer-location-vm"
   }
   iam_instance_profile = aws_iam_instance_profile.case4-iam-instance-profile.name
+
 
 }
