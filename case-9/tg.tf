@@ -30,3 +30,8 @@ resource "aws_route" "case9-tg-vpc2-to-vpc1" {
     destination_cidr_block = aws_vpc.case9-vpc-1.cidr_block
     transit_gateway_id     = aws_ec2_transit_gateway.case9-tg.id
 }
+resource "aws_route" "vpc1-to-ohiovpc" {
+    route_table_id         = aws_route_table.case9-vpc1-public-rt.id
+    destination_cidr_block = data.aws_vpc.ohio-vpc.cidr_block
+    transit_gateway_id     = aws_ec2_transit_gateway.case9-tg.id  
+}
