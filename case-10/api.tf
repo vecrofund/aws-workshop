@@ -4,6 +4,9 @@
 resource "aws_api_gateway_rest_api" "ms1-api" {
   name        = "ms1-api"
   description = "Example API Gateway"
+    endpoint_configuration {
+        types = ["REGIONAL"]
+    }
 }
 
 # creating a resource /data 
@@ -23,12 +26,33 @@ resource "aws_api_gateway_method" "ms1-api-get-method" {
   authorization = "NONE"
 }
 
+
+resource "aws_api_gateway_method" "ms1-api-POST-method" {
+    rest_api_id   = aws_api_gateway_rest_api.ms1-api.id
+  resource_id   = aws_api_gateway_resource.ms1-api-resource.id
+  http_method   = "POST"
+  authorization = "NONE"
+
+}
+
 # integrating the GET method with lambda function
 
 resource "aws_api_gateway_integration" "ms1-api-get-integration" {
   rest_api_id = aws_api_gateway_rest_api.ms1-api.id
   resource_id = aws_api_gateway_resource.ms1-api-resource.id
   http_method = aws_api_gateway_method.ms1-api-get-method.http_method
+
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.lambda-ms1.invoke_arn
+}
+
+# passing post method to lambda function
+
+resource "aws_api_gateway_integration" "ms1-api-post-integration" {
+  rest_api_id = aws_api_gateway_rest_api.ms1-api.id
+  resource_id = aws_api_gateway_resource.ms1-api-resource.id
+  http_method = aws_api_gateway_method.ms1-api-POST-method.http_method
 
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
@@ -56,6 +80,14 @@ resource "aws_api_gateway_stage" "ms1-api-stage" {
 resource "aws_api_gateway_deployment" "ms1-api-deployment" {
   depends_on = [aws_api_gateway_integration.ms1-api-get-integration]
   rest_api_id = aws_api_gateway_rest_api.ms1-api.id
+  triggers = {
+    redeployment = sha1(jsonencode([
+        aws_api_gateway_method.ms1-api-get-method.id,
+        aws_api_gateway_integration.ms1-api-get-integration.id,
+        aws_api_gateway_method.ms1-api-POST-method.id,
+        aws_api_gateway_integration.ms1-api-post-integration.id
+    ]))
+  }
 }
 
 # enabling cloudwatch logs for api gateway
