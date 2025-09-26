@@ -1,5 +1,6 @@
 import json
 import os
+import base64
 
 def _resp(status=200, body=None, headers=None):
     return {
@@ -8,7 +9,7 @@ def _resp(status=200, body=None, headers=None):
         "body": json.dumps(body if body is not None else {})
     }
 
-def handler(event, context):
+def handlerone(event, context):
     # Demonstrate what we receive
     print("Received event:", json.dumps(event, indent=2))
 
