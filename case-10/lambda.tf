@@ -33,3 +33,10 @@ resource "aws_iam_role_policy_attachment" "case10-attach-policy" {
   role       = aws_iam_role.case10-lambda-iam-role.name
   policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
 }
+resource "aws_lambda_permission" "api-gateway-lambda-permission" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.lambda-ms1.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.ms1-api.execution_arn}/*/*"
+}
