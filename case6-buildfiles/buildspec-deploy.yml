@@ -1,0 +1,25 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo "Installing kubectl"
+      - curl -o kubectl https://amazon-eks.s3.us-west-2.amazonaws.com/1.21.2/2021-07-05/bin/linux/amd64/kubectl
+      - chmod +x ./kubectl
+      - mv ./kubectl /usr/local/bin
+  pre_build:
+    commands:
+      - echo "Starting deploy phase"
+      - echo "Configuring kubectl"
+      - aws eks update-kubeconfig --region us-east-1 --name eks2
+  build:
+    commands:
+      - echo "Deploying to EKS cluster"
+      - kubectl apply -f https://raw.githubusercontent.com/himanshurathi/testcase6/refs/heads/main/k8s/deployment.yaml
+      - kubectl set image deployment/webapp app=619512840514.dkr.ecr.us-east-1.amazonaws.com/case6-ecr:latest
+  post_build:
+    commands:
+      - echo "Deployment completed"
+artifacts:
+  files:
+    - "**/*"

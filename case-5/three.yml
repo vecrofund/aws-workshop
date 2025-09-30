@@ -1,0 +1,29 @@
+name: demo-CI/CD on github-actions
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  job-one:
+    runs-on: ubuntu-latest
+    steps:
+      - name: clone the code
+        uses: actions/checkout@v3
+      - name: install terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.1.7"
+      - name: install awscli
+        uses: aws-actions/configure-aws-credentials@v5.0.0
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: setup something
+        run: |
+          chmod +x script.sh
+          ./script.sh
+          terraform version
+          aws s3 ls --region us-east-1
